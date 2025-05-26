@@ -28,8 +28,117 @@ const MainFeature = ({ activeTab }) => {
     { id: 3, farmId: 1, amount: 300.00, category: "Fertilizer", description: "Organic fertilizer", date: "2024-04-05", paymentMethod: "Cash" }
   ])
 
-  const [showForm, setShowForm] = useState(false)
-  const [editingItem, setEditingItem] = useState(null)
+      </motion.div>
+
+      {/* Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        {renderContent()}
+      </motion.div>
+
+      {/* Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+            onClick={() => setShowForm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-surface-800 rounded-2xl shadow-card p-6 sm:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-surface-900 dark:text-white">{config.title}</h2>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="p-2 text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 rounded-lg transition-colors"
+                >
+                  <ApperIcon name="X" className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {config.fields.map((field) => (
+                  <div key={field.name}>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                    </label>
+                    
+                    {field.type === 'select' ? (
+                      <select
+                        value={formData[field.name] || ''}
+                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                        className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors"
+                        required={field.required}
+                      >
+                        <option value="">Select {field.label}</option>
+                        {(Array.isArray(field.options) ? field.options : []).map((option) => (
+                          <option 
+                            key={typeof option === 'object' ? option.value : option} 
+                            value={typeof option === 'object' ? option.value : option}
+                          >
+                            {typeof option === 'object' ? option.label : option}
+                          </option>
+                        ))}
+                      </select>
+                    ) : field.type === 'textarea' ? (
+                      <textarea
+                        value={formData[field.name] || ''}
+                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                        placeholder={field.placeholder}
+                        rows={3}
+                        className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors resize-none"
+                        required={field.required}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        value={formData[field.name] || ''}
+                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                        placeholder={field.placeholder}
+                        step={field.step}
+                        className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors"
+                        required={field.required}
+                      />
+                    )}
+                  </div>
+                ))}
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 px-4 py-3 border border-surface-300 dark:border-surface-600 text-surface-700 dark:text-surface-300 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-card"
+                  >
+                    {editingItem ? 'Update' : 'Add'} {activeTab.slice(0, -1)}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export default MainFeature
+
   const [formData, setFormData] = useState({})
 
   // Form configurations for different tabs
