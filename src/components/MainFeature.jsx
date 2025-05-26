@@ -5,6 +5,10 @@ import { format, addDays, parseISO } from 'date-fns'
 import ApperIcon from './ApperIcon'
 
 const MainFeature = ({ activeTab }) => {
+  const [showForm, setShowForm] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+  const [formData, setFormData] = useState({})
+
   const [farms, setFarms] = useState([
     { id: 1, name: "Green Valley Farm", location: "California", size: "150 acres", soilType: "Loamy", createdDate: "2023-01-15" },
     { id: 2, name: "Sunset Ranch", location: "Texas", size: "280 acres", soilType: "Clay", createdDate: "2023-03-20" }
@@ -28,119 +32,6 @@ const MainFeature = ({ activeTab }) => {
     { id: 3, farmId: 1, amount: 300.00, category: "Fertilizer", description: "Organic fertilizer", date: "2024-04-05", paymentMethod: "Cash" }
   ])
 
-      </motion.div>
-
-      {/* Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        {renderContent()}
-      </motion.div>
-
-      {/* Form Modal */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
-            onClick={() => setShowForm(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-surface-800 rounded-2xl shadow-card p-6 sm:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-surface-900 dark:text-white">{config.title}</h2>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="p-2 text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 rounded-lg transition-colors"
-                >
-                  <ApperIcon name="X" className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {config.fields.map((field) => (
-                  <div key={field.name}>
-                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
-                    </label>
-                    
-                    {field.type === 'select' ? (
-                      <select
-                        value={formData[field.name] || ''}
-                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                        className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors"
-                        required={field.required}
-                      >
-                        <option value="">Select {field.label}</option>
-                        {(Array.isArray(field.options) ? field.options : []).map((option) => (
-                          <option 
-                            key={typeof option === 'object' ? option.value : option} 
-                            value={typeof option === 'object' ? option.value : option}
-                          >
-                            {typeof option === 'object' ? option.label : option}
-                          </option>
-                        ))}
-                      </select>
-                    ) : field.type === 'textarea' ? (
-                      <textarea
-                        value={formData[field.name] || ''}
-                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                        placeholder={field.placeholder}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors resize-none"
-                        required={field.required}
-                      />
-                    ) : (
-                      <input
-                        type={field.type}
-                        value={formData[field.name] || ''}
-                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                        placeholder={field.placeholder}
-                        step={field.step}
-                        className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors"
-                        required={field.required}
-                      />
-                    )}
-                  </div>
-                ))}
-
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="flex-1 px-4 py-3 border border-surface-300 dark:border-surface-600 text-surface-700 dark:text-surface-300 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-card"
-                  >
-                    {editingItem ? 'Update' : 'Add'} {activeTab.slice(0, -1)}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-export default MainFeature
-
-  const [formData, setFormData] = useState({})
-
   // Form configurations for different tabs
   const getFormConfig = () => {
     switch (activeTab) {
@@ -152,6 +43,19 @@ export default MainFeature
             { name: 'location', label: 'Location', type: 'text', required: true },
             { name: 'size', label: 'Size', type: 'text', placeholder: 'e.g., 150 acres', required: true },
             { name: 'soilType', label: 'Soil Type', type: 'select', options: ['Loamy', 'Clay', 'Sandy', 'Silty'], required: true }
+          ]
+        }
+      case 'crops':
+        return {
+          title: editingItem ? 'Edit Crop' : 'Add New Crop',
+          fields: [
+            { name: 'farmId', label: 'Farm', type: 'select', options: farms.map(f => ({ value: f.id, label: f.name })), required: true },
+            { name: 'cropType', label: 'Crop Type', type: 'text', required: true },
+            { name: 'variety', label: 'Variety', type: 'text', required: true },
+            { name: 'plantingDate', label: 'Planting Date', type: 'date', required: true },
+            { name: 'expectedHarvestDate', label: 'Expected Harvest Date', type: 'date', required: true },
+            { name: 'area', label: 'Area', type: 'text', placeholder: 'e.g., 2 acres', required: true },
+            { name: 'status', label: 'Status', type: 'select', options: ['Growing', 'Mature', 'Harvested', 'Planted'], required: true }
           ]
         }
       case 'tasks':
@@ -201,6 +105,10 @@ export default MainFeature
         setFarms(farms.filter(f => f.id !== id))
         toast.success('Farm deleted successfully')
         break
+      case 'crops':
+        setCrops(crops.filter(c => c.id !== id))
+        toast.success('Crop deleted successfully')
+        break
       case 'tasks':
         setTasks(tasks.filter(t => t.id !== id))
         toast.success('Task deleted successfully')
@@ -238,6 +146,7 @@ export default MainFeature
       ...formData,
       id: editingItem ? editingItem.id : Date.now(),
       ...(activeTab === 'farms' && !editingItem && { createdDate: format(new Date(), 'yyyy-MM-dd') }),
+      ...(activeTab === 'crops' && { farmId: parseInt(formData.farmId) }),
       ...(activeTab === 'tasks' && { farmId: parseInt(formData.farmId) }),
       ...(activeTab === 'expenses' && { farmId: parseInt(formData.farmId), amount: parseFloat(formData.amount) })
     }
@@ -250,6 +159,15 @@ export default MainFeature
         } else {
           setFarms([...farms, newItem])
           toast.success('Farm added successfully')
+        }
+        break
+      case 'crops':
+        if (editingItem) {
+          setCrops(crops.map(c => c.id === editingItem.id ? newItem : c))
+          toast.success('Crop updated successfully')
+        } else {
+          setCrops([...crops, newItem])
+          toast.success('Crop added successfully')
         }
         break
       case 'tasks':
@@ -330,6 +248,76 @@ export default MainFeature
                 </div>
               </motion.div>
             ))}
+          </div>
+        )
+
+      case 'crops':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {crops.map((crop, index) => {
+              const farm = farms.find(f => f.id === crop.farmId)
+              
+              return (
+                <motion.div
+                  key={crop.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700 hover:shadow-soft transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">{crop.cropType}</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2 text-sm text-surface-600 dark:text-surface-400">
+                          <ApperIcon name="Leaf" className="w-4 h-4" />
+                          <span>{crop.variety} variety</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-surface-600 dark:text-surface-400">
+                          <ApperIcon name="Home" className="w-4 h-4" />
+                          <span>{farm?.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-surface-600 dark:text-surface-400">
+                          <ApperIcon name="Maximize" className="w-4 h-4" />
+                          <span>{crop.area}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm">
+                          <ApperIcon name="CircleDot" className="w-4 h-4" />
+                          <span className={`px-2 py-1 text-xs rounded-lg ${
+                            crop.status === 'Growing' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                            crop.status === 'Mature' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
+                            crop.status === 'Harvested' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' :
+                            'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300'
+                          }`}>{crop.status}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(crop)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                      >
+                        <ApperIcon name="Edit" className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(crop.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <ApperIcon name="Trash2" className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-surface-200 dark:border-surface-700 space-y-2">
+                    <div className="flex justify-between text-xs text-surface-500 dark:text-surface-500">
+                      <span>Planted: {format(parseISO(crop.plantingDate), 'MMM dd, yyyy')}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-surface-500 dark:text-surface-500">
+                      <span>Expected Harvest: {format(parseISO(crop.expectedHarvestDate), 'MMM dd, yyyy')}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
           </div>
         )
 
@@ -554,6 +542,7 @@ export default MainFeature
           </h1>
           <p className="text-surface-600 dark:text-surface-400">
             {activeTab === 'farms' && 'Manage your farm properties and locations'}
+            {activeTab === 'crops' && 'Track your crop planting, growth, and harvest cycles'}
             {activeTab === 'tasks' && 'Track and schedule your farming activities'}
             {activeTab === 'expenses' && 'Monitor your farm-related expenses and budget'}
           </p>
