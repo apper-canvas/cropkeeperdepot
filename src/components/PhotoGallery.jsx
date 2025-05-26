@@ -165,14 +165,16 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
   }
 
   // Dropzone configuration
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: handleFileUpload,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
     },
     multiple: true,
-    disabled: isUploading
+    disabled: isUploading,
+    noClick: true
   })
+
 
   const handleDeletePhoto = (photoId) => {
     setPhotos(photos.filter(p => p.id !== photoId))
@@ -526,18 +528,12 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => {
-                        const input = document.createElement('input')
-                        input.type = 'file'
-                        input.multiple = true
-                        input.accept = 'image/*'
-                        input.onchange = (e) => handleFileUpload(Array.from(e.target.files))
-                        input.click()
-                      }}
+                      onClick={() => open()}
                       className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-card"
                     >
                       Browse Files
                     </button>
+
                   </div>
                 </div>
               )}
