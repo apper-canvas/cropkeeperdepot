@@ -51,9 +51,12 @@ const Home = () => {
   const tabItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
     { id: 'farms', label: 'Farms', icon: 'Home' },
+    { id: 'crops', label: 'Crops', icon: 'Wheat' },
     { id: 'tasks', label: 'Tasks', icon: 'CheckSquare' },
-    { id: 'expenses', label: 'Expenses', icon: 'DollarSign' }
+    { id: 'expenses', label: 'Expenses', icon: 'DollarSign' },
+    { id: 'photos', label: 'Photos', icon: 'Camera' }
   ]
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-orange-50 dark:from-surface-900 dark:via-surface-800 dark:to-surface-900">
@@ -251,7 +254,8 @@ const Home = () => {
             </motion.div>
           )}
 
-          {(activeTab === 'farms' || activeTab === 'tasks' || activeTab === 'expenses') && (
+          {(activeTab === 'farms' || activeTab === 'crops' || activeTab === 'tasks' || activeTab === 'expenses' || activeTab === 'photos') && (
+
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 20 }}
