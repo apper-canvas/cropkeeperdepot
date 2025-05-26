@@ -172,7 +172,6 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
     },
     multiple: true,
     disabled: isUploading,
-    disabled: isUploading
 
   })
 
