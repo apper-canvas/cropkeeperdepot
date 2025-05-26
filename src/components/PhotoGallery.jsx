@@ -491,6 +491,7 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
                   </div>
                   <p className="text-sm text-surface-600 dark:text-surface-400">{Math.round(uploadProgress)}% complete</p>
                 </div>
+              ) : (
                 <div>
                   <div
                     {...getRootProps()}
@@ -539,6 +540,8 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
                     </button>
                   </div>
                 </div>
+              )}
+
             </motion.div>
           </motion.div>
         )}
