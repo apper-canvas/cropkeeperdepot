@@ -491,7 +491,6 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
                   </div>
                   <p className="text-sm text-surface-600 dark:text-surface-400">{Math.round(uploadProgress)}% complete</p>
                 </div>
-              ) : (
                 <div>
                   <div
                     {...getRootProps()}
@@ -499,7 +498,7 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
                       isDragActive ? 'dragover' : ''
                     }`}
                   >
-                    <input {...getInputProps()} ref={fileInputRef} />
+                    <input {...getInputProps()} />
                     <div className="space-y-4">
                       <div className="w-16 h-16 bg-surface-100 dark:bg-surface-700 rounded-full flex items-center justify-center mx-auto">
                         <ApperIcon name="Upload" className="w-8 h-8 text-surface-400" />
@@ -526,14 +525,20 @@ const PhotoGallery = ({ farms, crops, tasks }) => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => {
+                        const input = document.createElement('input')
+                        input.type = 'file'
+                        input.multiple = true
+                        input.accept = 'image/*'
+                        input.onchange = (e) => handleFileUpload(Array.from(e.target.files))
+                        input.click()
+                      }}
                       className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-card"
                     >
                       Browse Files
                     </button>
                   </div>
                 </div>
-              )}
             </motion.div>
           </motion.div>
         )}
