@@ -94,12 +94,6 @@ const MainFeature = ({ activeTab }) => {
           ]
         }
       default:
-      case 'reports':
-        return {
-          title: 'Expense Report',
-          fields: []
-        }
-      default:
         return { title: '', fields: [] }
 
     }
