@@ -530,6 +530,9 @@ const MainFeature = ({ activeTab }) => {
               })}
             </div>
           </div>
+        )
+
+
 
       case 'reports':
         
