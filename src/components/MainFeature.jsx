@@ -32,6 +32,14 @@ const MainFeature = ({ activeTab }) => {
     { id: 1, farmId: 1, amount: 450.00, category: "Seeds", description: "Tomato and corn seeds", date: "2024-03-10", paymentMethod: "Credit Card" },
     { id: 2, farmId: 2, amount: 1200.00, category: "Equipment", description: "New irrigation system", date: "2024-03-15", paymentMethod: "Bank Transfer" },
     { id: 3, farmId: 1, amount: 300.00, category: "Fertilizer", description: "Organic fertilizer", date: "2024-04-05", paymentMethod: "Cash" }
+
+  // Reports state
+  const [reportDateRange, setReportDateRange] = useState({
+    startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+    endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
+  })
+  const [reportView, setReportView] = useState('overview')
+
   ])
 
   // Form configurations for different tabs
@@ -528,11 +536,6 @@ const MainFeature = ({ activeTab }) => {
           </div>
 
       case 'reports':
-        const [reportDateRange, setReportDateRange] = useState({
-          startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-          endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
-        })
-        const [reportView, setReportView] = useState('overview')
         
         const filteredExpenses = expenses.filter(expense => {
           const expenseDate = parseISO(expense.date)
@@ -540,6 +543,9 @@ const MainFeature = ({ activeTab }) => {
           const end = parseISO(reportDateRange.endDate)
           return isWithinInterval(expenseDate, { start, end })
         })
+
+        const [reportView, setReportView] = useState('overview')
+        
         
         const reportTotalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0)
         const reportExpensesByCategory = filteredExpenses.reduce((acc, expense) => {
@@ -913,9 +919,6 @@ const MainFeature = ({ activeTab }) => {
               </div>
             )}
           </div>
-        )
-
-        )
 
       default:
         return null
