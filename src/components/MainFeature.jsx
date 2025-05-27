@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-toastify'
-import { format, addDays, parseISO } from 'date-fns'
+import { format, addDays, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import ApperIcon from './ApperIcon'
+
 
 const MainFeature = ({ activeTab }) => {
   const [showForm, setShowForm] = useState(false)
@@ -83,6 +85,12 @@ const MainFeature = ({ activeTab }) => {
           ]
         }
       default:
+      case 'reports':
+        return {
+          title: 'Expense Report',
+          fields: []
+        }
+
         return { title: '', fields: [] }
     }
   }
@@ -518,6 +526,395 @@ const MainFeature = ({ activeTab }) => {
               })}
             </div>
           </div>
+
+      case 'reports':
+        const [reportDateRange, setReportDateRange] = useState({
+          startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+          endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
+        })
+        const [reportView, setReportView] = useState('overview')
+        
+        const filteredExpenses = expenses.filter(expense => {
+          const expenseDate = parseISO(expense.date)
+          const start = parseISO(reportDateRange.startDate)
+          const end = parseISO(reportDateRange.endDate)
+          return isWithinInterval(expenseDate, { start, end })
+        })
+        
+        const reportTotalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+        const reportExpensesByCategory = filteredExpenses.reduce((acc, expense) => {
+          acc[expense.category] = (acc[expense.category] || 0) + expense.amount
+          return acc
+        }, {})
+        
+        const reportExpensesByFarm = filteredExpenses.reduce((acc, expense) => {
+          const farm = farms.find(f => f.id === expense.farmId)
+          const farmName = farm?.name || 'Unknown Farm'
+          acc[farmName] = (acc[farmName] || 0) + expense.amount
+          return acc
+        }, {})
+        
+        const monthlyExpenses = filteredExpenses.reduce((acc, expense) => {
+          const month = format(parseISO(expense.date), 'MMM yyyy')
+          acc[month] = (acc[month] || 0) + expense.amount
+          return acc
+        }, {})
+        
+        const chartData = Object.entries(reportExpensesByCategory).map(([category, amount]) => ({
+          category,
+          amount: Number(amount.toFixed(2))
+        }))
+        
+        const pieData = Object.entries(reportExpensesByCategory).map(([category, amount]) => ({
+          name: category,
+          value: Number(amount.toFixed(2))
+        }))
+        
+        const monthlyChartData = Object.entries(monthlyExpenses).map(([month, amount]) => ({
+          month,
+          amount: Number(amount.toFixed(2))
+        }))
+        
+        const COLORS = ['#16a34a', '#ea580c', '#0ea5e9', '#dc2626', '#7c3aed', '#059669']
+        
+        const handleDateRangeChange = (field, value) => {
+          setReportDateRange(prev => ({ ...prev, [field]: value }))
+        }
+        
+        const exportToPDF = () => {
+          toast.success('PDF export feature will be implemented with @react-pdf/renderer')
+        }
+        
+        const exportToCSV = () => {
+          const csvData = filteredExpenses.map(expense => {
+            const farm = farms.find(f => f.id === expense.farmId)
+            return {
+              Date: expense.date,
+              Farm: farm?.name || 'Unknown',
+              Category: expense.category,
+              Description: expense.description,
+              Amount: expense.amount,
+              PaymentMethod: expense.paymentMethod
+            }
+          })
+          
+          const csvContent = [
+            Object.keys(csvData[0] || {}).join(','),
+            ...csvData.map(row => Object.values(row).join(','))
+          ].join('\n')
+          
+          const blob = new Blob([csvContent], { type: 'text/csv' })
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `expense-report-${reportDateRange.startDate}-to-${reportDateRange.endDate}.csv`
+          a.click()
+          window.URL.revokeObjectURL(url)
+          toast.success('CSV exported successfully')
+        }
+        
+        return (
+          <div className="space-y-6">
+            {/* Report Controls */}
+            <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div>
+                  <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">Report Settings</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-surface-700 dark:text-surface-300">From:</label>
+                      <input
+                        type="date"
+                        value={reportDateRange.startDate}
+                        onChange={(e) => handleDateRangeChange('startDate', e.target.value)}
+                        className="px-3 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-surface-700 dark:text-surface-300">To:</label>
+                      <input
+                        type="date"
+                        value={reportDateRange.endDate}
+                        onChange={(e) => handleDateRangeChange('endDate', e.target.value)}
+                        className="px-3 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-green-500 focus:ring-0 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <div className="flex bg-surface-100 dark:bg-surface-700 rounded-lg p-1">
+                    {['overview', 'charts', 'detailed'].map((view) => (
+                      <button
+                        key={view}
+                        onClick={() => setReportView(view)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          reportView === view
+                            ? 'bg-white dark:bg-surface-600 text-green-600 dark:text-green-400 shadow-card'
+                            : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {view.charAt(0).toUpperCase() + view.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={exportToCSV}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <ApperIcon name="FileText" className="w-4 h-4" />
+                      <span>CSV</span>
+                    </button>
+                    <button
+                      onClick={exportToPDF}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <ApperIcon name="FileText" className="w-4 h-4" />
+                      <span>PDF</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Report Content */}
+            {reportView === 'overview' && (
+              <div className="space-y-6">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-2xl shadow-card">
+                    <div className="flex items-center space-x-3">
+                      <ApperIcon name="DollarSign" className="w-8 h-8" />
+                      <div>
+                        <p className="text-green-100 text-sm">Total Amount</p>
+                        <p className="text-2xl font-bold">${reportTotalExpenses.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center">
+                        <ApperIcon name="Receipt" className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-surface-600 dark:text-surface-400 text-sm">Total Transactions</p>
+                        <p className="text-xl font-bold text-surface-900 dark:text-white">{filteredExpenses.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center">
+                        <ApperIcon name="TrendingUp" className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div>
+                        <p className="text-surface-600 dark:text-surface-400 text-sm">Average per Transaction</p>
+                        <p className="text-xl font-bold text-surface-900 dark:text-white">
+                          ${filteredExpenses.length ? (reportTotalExpenses / filteredExpenses.length).toFixed(2) : '0.00'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center">
+                        <ApperIcon name="Tag" className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-surface-600 dark:text-surface-400 text-sm">Categories</p>
+                        <p className="text-xl font-bold text-surface-900 dark:text-white">{Object.keys(reportExpensesByCategory).length}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Category Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">Expenses by Category</h3>
+                    <div className="space-y-3">
+                      {Object.entries(reportExpensesByCategory).map(([category, amount]) => {
+                        const percentage = (amount / reportTotalExpenses) * 100
+                        return (
+                          <div key={category} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                              <span className="text-surface-700 dark:text-surface-300">{category}</span>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-surface-900 dark:text-white">${amount.toFixed(2)}</p>
+                              <p className="text-sm text-surface-500">{percentage.toFixed(1)}%</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">Expenses by Farm</h3>
+                    <div className="space-y-3">
+                      {Object.entries(reportExpensesByFarm).map(([farmName, amount]) => {
+                        const percentage = (amount / reportTotalExpenses) * 100
+                        return (
+                          <div key={farmName} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                              <span className="text-surface-700 dark:text-surface-300">{farmName}</span>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-surface-900 dark:text-white">${amount.toFixed(2)}</p>
+                              <p className="text-sm text-surface-500">{percentage.toFixed(1)}%</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {reportView === 'charts' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Bar Chart */}
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">Expenses by Category</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="category" className="text-xs" />
+                          <YAxis className="text-xs" />
+                          <Tooltip 
+                            formatter={(value) => [`$${value}`, 'Amount']}
+                            labelStyle={{ color: '#1e293b' }}
+                            contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                          />
+                          <Bar dataKey="amount" fill="#16a34a" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  
+                  {/* Pie Chart */}
+                  <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">Category Distribution</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            labelLine={false}
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => [`$${value}`, 'Amount']} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Monthly Trend */}
+                <div className="bg-white dark:bg-surface-800 p-6 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700">
+                  <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">Monthly Expense Trend</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyChartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="month" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <Tooltip 
+                          formatter={(value) => [`$${value}`, 'Amount']}
+                          labelStyle={{ color: '#1e293b' }}
+                          contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                        />
+                        <Line type="monotone" dataKey="amount" stroke="#16a34a" strokeWidth={3} dot={{ fill: '#16a34a', r: 6 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {reportView === 'detailed' && (
+              <div className="bg-white dark:bg-surface-800 rounded-2xl shadow-card border border-surface-200 dark:border-surface-700 overflow-hidden">
+                <div className="p-6 border-b border-surface-200 dark:border-surface-700">
+                  <h3 className="text-lg font-semibold text-surface-900 dark:text-white">Detailed Expense List</h3>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-surface-50 dark:bg-surface-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Farm</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Payment Method</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-200 dark:divide-surface-700">
+                      {filteredExpenses.map((expense) => {
+                        const farm = farms.find(f => f.id === expense.farmId)
+                        return (
+                          <tr key={expense.id} className="hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-900 dark:text-white">
+                              {format(parseISO(expense.date), 'MMM dd, yyyy')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-900 dark:text-white">
+                              {farm?.name || 'Unknown'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg">
+                                {expense.category}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-surface-900 dark:text-white">
+                              {expense.description}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex px-2 py-1 text-xs font-medium bg-surface-100 dark:bg-surface-700 text-surface-800 dark:text-surface-200 rounded-lg">
+                                {expense.paymentMethod}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-surface-900 dark:text-white text-right">
+                              ${expense.amount.toFixed(2)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {filteredExpenses.length === 0 && (
+                  <div className="text-center py-12">
+                    <ApperIcon name="Receipt" className="w-12 h-12 text-surface-400 mx-auto mb-4" />
+                    <p className="text-surface-500 dark:text-surface-400">No expenses found for the selected date range.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+
         )
 
       default:

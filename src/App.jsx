@@ -8,6 +8,8 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-orange-50 dark:from-surface-900 dark:via-surface-800 dark:to-surface-900">
       <Routes>
+        <Route path="/reports" element={<Home />} />
+
         <Route path="/" element={<Home />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

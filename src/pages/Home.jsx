@@ -54,8 +54,10 @@ const Home = () => {
     { id: 'crops', label: 'Crops', icon: 'Wheat' },
     { id: 'tasks', label: 'Tasks', icon: 'CheckSquare' },
     { id: 'expenses', label: 'Expenses', icon: 'DollarSign' },
-    { id: 'photos', label: 'Photos', icon: 'Camera' }
+    { id: 'photos', label: 'Photos', icon: 'Camera' },
+    { id: 'reports', label: 'Reports', icon: 'BarChart3' }
   ]
+
 
 
   return (
@@ -254,7 +256,7 @@ const Home = () => {
             </motion.div>
           )}
 
-          {(activeTab === 'farms' || activeTab === 'crops' || activeTab === 'tasks' || activeTab === 'expenses' || activeTab === 'photos') && (
+          {(activeTab === 'farms' || activeTab === 'crops' || activeTab === 'tasks' || activeTab === 'expenses' || activeTab === 'photos' || activeTab === 'reports') && (
 
             <motion.div
               key={activeTab}
