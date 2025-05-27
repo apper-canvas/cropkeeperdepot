@@ -917,6 +917,11 @@ const MainFeature = ({ activeTab }) => {
               </div>
             )}
           </div>
+        )
+
+        break
+
+
 
       default:
         return null
