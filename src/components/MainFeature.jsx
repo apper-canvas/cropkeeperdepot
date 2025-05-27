@@ -967,6 +967,8 @@ const MainFeature = ({ activeTab }) => {
             {activeTab === 'tasks' && 'Track and schedule your farming activities'}
             {activeTab === 'expenses' && 'Monitor your farm-related expenses and budget'}
             {activeTab === 'reports' && 'Generate comprehensive reports from your expense data'}
+          </p>
+
 
         </div>
         
