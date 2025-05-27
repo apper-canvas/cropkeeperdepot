@@ -4,7 +4,6 @@ import { toast } from 'react-toastify'
 import { format, addDays, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import ApperIcon from './ApperIcon'
-import { generateExpenseReportPDF } from '../utils/pdfGenerator'
 
 
 
@@ -588,14 +587,9 @@ const MainFeature = ({ activeTab }) => {
         }
         
         const exportToPDF = async () => {
-          try {
-            await generateExpenseReportPDF(filteredExpenses, farms, reportDateRange)
-            toast.success('PDF exported successfully')
-          } catch (error) {
-            toast.error('Failed to export PDF')
-            console.error('PDF export error:', error)
-          }
+          toast.info('PDF export feature will be available soon')
         }
+
 
         
         const exportToCSV = () => {
